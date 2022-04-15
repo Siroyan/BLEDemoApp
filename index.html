@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <title>温湿度ロガー</title>
+  </head>
+
+  <body>
+    <main>
+      <button onclick="onButtonClick()">Get Bluetooth Device Info</button>
+      <span id = "temp">0.0</span>
+      <span id = "humi">0.0</span>
+    </main>
+    <script>
+      async function onButtonClick() {
+        await navigator.bluetooth
+          .requestLEScan({
+            filters: [{ namePrefix: ["Feather"] }],
+            keepRepeatedDevices: true,
+          })
+          .then(() => {
+            navigator.bluetooth.addEventListener(
+              "advertisementreceived",
+              (event) => {
+                event.manufacturerData.forEach((valueDataView, key) => {
+                  let packet = new Uint8Array(valueDataView.buffer);
+                  let tempData = (packet[3] << 8 | packet[4]) / 65535.0 * 175 - 45.0;
+                  let humiData = (packet[5] << 8 | packet[6]) / 65535.0 * 100.0;
+                  document.getElementById("temp").innerHTML = Math.round(tempData * 1000) / 1000;
+                  document.getElementById("humi").innerHTML = Math.round(humiData * 1000) / 1000;
+                  console.log(tempData);
+                  console.log(humiData);
+                });
+              }
+            );
+          }
+        );
+      }
+    </script>
+  </body>
+</html>
